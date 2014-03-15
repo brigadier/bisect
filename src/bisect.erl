@@ -15,7 +15,7 @@
 -author('Knut Nesheim <knutin@gmail.com>').
 
 -export([new/2, new/3, insert/3, bulk_insert/2, append/3, find/2, foldl/3]).
--export([next/2, next_nth/3, first/1, last/1, delete/2, compact/1, cas/4, update/4]).
+-export([floor/2, next/2, next_nth/3, first/1, last/1, delete/2, compact/1, cas/4, update/4]).
 -export([serialize/1, deserialize/1, from_orddict/2, to_orddict/1, find_many/2, merge/2]).
 -export([expected_size/2, expected_size_mb/2, num_keys/1, size/1]).
 
@@ -185,6 +185,19 @@ delete(B, K) ->
         _ ->
             erlang:error(badarg)
     end.
+-spec floor(bindict(), key()) -> {key(), value()} | not_found.
+%% @doc: Returns the previous smaller key and value associated with it or
+%% 'not_found' if no smaller key exists.
+floor(#bindict{key_size = KeySize, value_size = ValueSize} = B, K) ->
+  Offset = index2offset(B, index(B, inc(K)) - 1),
+  case B#bindict.b of
+    <<_:Offset/binary, Key:KeySize/binary, Value:ValueSize/binary, _/binary>> ->
+      {Key, Value};
+    _ ->
+      not_found
+  end.
+
+
 
 -spec next(bindict(), key()) -> {key(), value()} | not_found.
 %% @doc: Returns the next larger key and value associated with it or
